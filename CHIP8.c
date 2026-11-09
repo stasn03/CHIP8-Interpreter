@@ -1,7 +1,6 @@
 #include "CHIP8.h"
 #include <stdbool.h>
 #include <stdio.h>
-#include <string.h>
 
 static const uint8_t fontset[80] = {
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -24,7 +23,8 @@ static const uint8_t fontset[80] = {
 void reset() {
   pc = 0x200;
   opcode = 0;
-  I = 0;
+  X = 0;
+  Y = 0;
   sp = 0;
   delay_timer = 0;
   sound_timer = 0;
@@ -61,11 +61,65 @@ bool load(const char *filepath) {
 }
 
 void decode() {
-  // NNN: adress
-  // NN: 8-bit constant
-  // N: 4-bit constant
-  // X & Y: 4-bit register identifier
-  //
-  // 0X0NN
-  // 0X00EE
+  opcode = memory[pc] << 8 | memory[pc + 1];
+  pc += 2;
+
+  uint8_t nibble = opcode >> 12 & 0xF;
+  switch (nibble) {
+  case 0x0:
+    if (opcode == 0x00E0) { // clear screen
+      for (int i = 0; i < 2048; i++)
+        graphics[i] = 0;
+
+    } else if (opcode == 0x00EE) { // return from subrutine
+      if (sp > 0) {
+        pc = stack[sp];
+        sp--;
+      }
+    }
+    break;
+  // 1NNN - jump to NNN
+  case 0x1:
+    pc = opcode & 0x0FFF;
+    break;
+  // 2NNN - calls subrutine at NNN
+  case 0x2:
+    stack[sp] = pc;
+    sp++;
+    pc = opcode & 0x0FFF;
+
+  // 3XNN - skips if V[X] == NN
+  case 0x3:
+    X = (opcode >> 8) & 0x000F;
+    if (V[X] == (opcode & 0x00FF)) {
+      pc += 2;
+    }
+    break;
+    // 4XNN - skips if V[X] != NN
+  case 0x4:
+    X = (opcode >> 8) & 0x000F;
+    if (V[X] != (opcode & 0x00FF)) {
+      pc += 2;
+    }
+    break;
+  // 5XY0 - skips if V[X] == V[Y]
+  case 0x5:
+    X = (opcode >> 8) & 0x000F;
+    Y = (opcode >> 4) & 0x000F;
+
+    if (V[X] == V[Y]) {
+      pc += 2;
+    }
+    break;
+  // 6XNN - sets V[X] = NN
+  case 0x6:
+    X = (opcode >> 8) & 0x000F;
+    V[X] = (opcode & 0x00FF);
+    break;
+  // 7XNN - adds V[X] += NN
+  case 0x7:
+    X = (opcode >> 8) & 0x000F;
+    V[X] += (opcode & 0x00FF);
+    break;
+  }
 }
