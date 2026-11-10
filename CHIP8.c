@@ -121,5 +121,16 @@ void decode() {
     X = (opcode >> 8) & 0x000F;
     V[X] += (opcode & 0x00FF);
     break;
+  case 0x8:
+    uint8_t last_nibble = (opcode << 12) & 0xF000;
+    switch (last_nibble) {
+    // 8XY0 - sets V[x] to the value of V[Y]
+    case 0x0:
+      X = (opcode >> 8) & 0x000F;
+      Y = (opcode >> 4) & 0x000F;
+      V[X] = V[Y];
+
+      break;
+    }
   }
 }
