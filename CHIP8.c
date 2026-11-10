@@ -129,7 +129,6 @@ void decode() {
       X = (opcode >> 8) & 0x000F;
       Y = (opcode >> 4) & 0x000F;
       V[X] = V[Y];
-
       break;
     }
   }
