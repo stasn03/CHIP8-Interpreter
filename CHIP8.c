@@ -130,6 +130,24 @@ void decode() {
       Y = (opcode >> 4) & 0x000F;
       V[X] = V[Y];
       break;
+    // 8XY1 - sets V[X] to V[X] OR V[Y]
+    case 0x1:
+      X = (opcode >> 8) & 0x000F;
+      Y = (opcode >> 4) & 0x000F;
+      V[X] |= V[Y];
+      break;
+    // 8XY2 - sets V[X] to V[X] AND V[Y]
+    case 0x2:
+      X = (opcode >> 8) & 0x000F;
+      Y = (opcode >> 4) & 0x000F;
+      V[X] &= V[Y];
+      break;
+    // 8XY3 - sets V[X] to V[X] XOR V[Y]
+    case 0x3:
+      X = (opcode >> 8) & 0x000F;
+      Y = (opcode >> 4) & 0x000F;
+      V[X] ^= V[Y];
+      break;
     }
   }
 }
